@@ -1,0 +1,33 @@
+# Secrets
+.env
+.env.local
+.env.*.local
+*-sa.json
+*credentials*.json
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.next/
+coverage/
+
+# Data (uncomment if cars.db gets big)
+# *.db
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
