@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { HealthController } from './health.controller';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ConstantsModule } from './constants/constants.module';
@@ -27,6 +28,7 @@ import { AppThrottlerGuard } from './common/throttler.guard';
     ClarifyModule,
     ShortlistModule,
   ],
+  controllers: [HealthController],
   providers: [
     { provide: APP_GUARD, useClass: AppThrottlerGuard },
   ],
