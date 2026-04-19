@@ -3,12 +3,6 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --gradient-start: #0f0f1a;
-    --gradient-mid: #111827;
-    --gradient-end: #0c0c16;
-  }
-
   * {
     box-sizing: border-box;
   }
@@ -18,106 +12,75 @@
   }
 
   body {
-    @apply bg-zinc-950 text-zinc-100 antialiased;
     font-family: 'Inter', system-ui, sans-serif;
-    background: radial-gradient(ellipse at 20% 20%, #1e1b4b 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 80%, #0c1a33 0%, transparent 50%),
-                #0a0a14;
+    background-color: #fff8f3;
+    color: #271900;
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
 @layer components {
-  .glass {
-    @apply backdrop-blur-xl border border-white/10;
-    background: rgba(255, 255, 255, 0.04);
-  }
-
-  .glass-card {
-    @apply glass rounded-2xl shadow-2xl;
-  }
-
-  .gradient-text {
-    @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #a78bfa 0%, #6366f1 50%, #3b82f6 100%);
-  }
-
-  .btn-primary {
-    @apply relative inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-white transition-all duration-300 overflow-hidden;
-    background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #2563eb 100%);
-    box-shadow: 0 0 30px rgba(99, 102, 241, 0.35);
-  }
-
-  .btn-primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 0 50px rgba(99, 102, 241, 0.55);
-  }
-
-  .btn-primary:active {
-    transform: translateY(0);
-  }
-
-  .btn-primary::before {
-    content: '';
-    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
-    background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #3b82f6 100%);
-  }
-
-  .btn-primary:hover::before {
-    @apply opacity-100;
-  }
-
+  /* Chip — clarify step feature selectors */
   .chip {
-    @apply relative cursor-pointer px-5 py-3 rounded-xl border text-sm font-medium transition-all duration-200;
-    border-color: rgba(255, 255, 255, 0.12);
-    background: rgba(255, 255, 255, 0.04);
-    color: rgba(255, 255, 255, 0.75);
+    @apply relative cursor-pointer flex flex-col items-start p-6 rounded-xl border text-left transition-all duration-200 outline-none;
+    background: #fff8f3;
+    border-color: #c1c6d5;
+    color: #271900;
+  }
+
+  .chip:focus-visible {
+    outline: 2px solid #914800;
+    outline-offset: 2px;
   }
 
   .chip:hover {
-    border-color: rgba(99, 102, 241, 0.6);
-    background: rgba(99, 102, 241, 0.12);
-    color: white;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.2);
+    border-color: #914800;
+    background: #ffebd0;
   }
 
   .chip.selected {
-    border-color: #6366f1;
-    background: rgba(99, 102, 241, 0.2);
-    color: white;
-    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+    background: #b65c00;
+    border-color: #b65c00;
+    border-width: 2px;
+    color: #fffbff;
+  }
+
+  /* Primary button — amber */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-8 py-4 rounded-lg font-semibold text-on-primary transition-colors duration-200;
+    background: #914800;
+  }
+
+  .btn-primary:hover {
+    background: #a65300;
+  }
+
+  .btn-primary:disabled {
+    @apply opacity-40 cursor-not-allowed;
+  }
+
+  /* Skeleton shimmer */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      #ffebd0 0%,
+      #ffe4be 50%,
+      #ffebd0 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.8s ease-in-out infinite;
   }
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #0a0a14;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(99, 102, 241, 0.3);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.5);
-}
-
-/* Shimmer animation for skeleton loading */
-.shimmer {
-  background: linear-gradient(
-    90deg,
-    rgba(255,255,255,0.03) 0%,
-    rgba(255,255,255,0.08) 50%,
-    rgba(255,255,255,0.03) 100%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.8s ease-in-out infinite;
-}
-
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
+  0%   { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
+
+/* Scrollbar */
+::-webkit-scrollbar       { width: 6px; }
+::-webkit-scrollbar-track { background: #fff2e2; }
+::-webkit-scrollbar-thumb { background: #ddc2a4; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #b65c00; }
