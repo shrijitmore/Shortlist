@@ -1,0 +1,20 @@
+services:
+  backend:
+    build: ./apps/backend
+    ports:
+      - "3001:3001"
+    volumes:
+      - "./data:/app/data"
+    environment:
+      - NODE_ENV=production
+      - DB_DIR=/app/data
+      - PORT=3001
+      - FRONTEND_URL=http://localhost:5173
+      - GEMINI_SERVICE_JSON=${GEMINI_SERVICE_JSON:-}
+
+  frontend:
+    build: ./apps/frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
