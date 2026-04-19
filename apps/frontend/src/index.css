@@ -49,8 +49,9 @@
 
   /* Primary button — amber */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-8 py-4 rounded-lg font-semibold text-on-primary transition-colors duration-200;
-    background: #914800;
+    @apply inline-flex items-center justify-center gap-2 px-8 py-4 rounded-lg font-semibold transition-colors duration-200;
+    background: theme('colors.primary');
+    color: theme('colors.on-primary');
   }
 
   .btn-primary:hover {

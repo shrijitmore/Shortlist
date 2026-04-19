@@ -1,7 +1,7 @@
 // src/components/ClarifyChips.tsx
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Leaf, Users, Gauge, Wallet, Navigation, Car } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Leaf, Users, Gauge, Wallet, Navigation, Car, Send } from 'lucide-react';
 import { MapComponent } from './MapComponent';
 
 interface Props {
@@ -27,13 +27,21 @@ function getOptionIcon(option: string) {
 
 export function ClarifyChips({ question, options, questionNumber, maxQuestions, onSelect, onBack, isLoading }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
+  const [customAnswer, setCustomAnswer] = useState('');
 
-  useEffect(() => { setSelected(null); }, [question]);
+  useEffect(() => { setSelected(null); setCustomAnswer(''); }, [question]);
 
   const handleSelect = (option: string) => {
     if (isLoading) return;
     setSelected(option);
     onSelect(option);
+  };
+
+  const handleSubmitCustom = () => {
+    const trimmed = customAnswer.trim();
+    if (isLoading || trimmed.length === 0) return;
+    setSelected(trimmed);
+    onSelect(trimmed);
   };
 
   const dots: number[] = [];
@@ -94,6 +102,36 @@ export function ClarifyChips({ question, options, questionNumber, maxQuestions, 
           </motion.button>
         )}
       />
+
+      {/* Free-text input — alternative to chips */}
+      <div className="mb-10">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="h-px flex-1 bg-outline-variant/40" />
+          <span className="text-sm font-label text-on-surface-variant">or type your own answer</span>
+          <div className="h-px flex-1 bg-outline-variant/40" />
+        </div>
+        <form
+          onSubmit={(e) => { e.preventDefault(); handleSubmitCustom(); }}
+          className="flex items-center gap-2"
+        >
+          <input
+            type="text"
+            value={customAnswer}
+            onChange={(e) => setCustomAnswer(e.target.value)}
+            disabled={isLoading}
+            placeholder="e.g. I mostly drive in mountainous regions…"
+            className="flex-1 px-4 py-3 rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface font-body placeholder:text-on-surface-variant/60 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary disabled:opacity-50"
+          />
+          <button
+            type="submit"
+            disabled={isLoading || customAnswer.trim().length === 0}
+            className="px-5 py-3 rounded-lg bg-primary text-on-primary font-label font-semibold flex items-center gap-2 hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <Send size={16} />
+            Send
+          </button>
+        </form>
+      </div>
 
       {/* Action row */}
       <div className="flex flex-col sm:flex-row items-center gap-4 justify-between pt-8 border-t border-outline-variant/30">
