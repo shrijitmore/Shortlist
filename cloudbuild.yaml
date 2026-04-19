@@ -28,3 +28,6 @@ steps:
 
 images:
   - gcr.io/$PROJECT_ID/shortlist-backend
+
+options:
+  logging: CLOUD_LOGGING_ONLY
