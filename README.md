@@ -2,6 +2,9 @@
 
 A conversational car-buying assistant for the Indian market. Users describe their situation in plain language; the system clarifies ambiguities, retrieves candidates from a local SQLite database, and returns three ranked picks with personalised rationale.
 
+**GitHub:** https://github.com/shrijitmore/Shortlist.git  
+**Screen recording:** https://drive.google.com/drive/folders/1XVbxSqhjuUuJ_rTQVUJVSm-izuccGL8u?usp=sharing
+
 ---
 
 ## What I Built and Why
