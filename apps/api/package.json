@@ -1,0 +1,19 @@
+{
+  "name": "@cardekho/api",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "test": "vitest run --reporter=verbose"
+  },
+  "dependencies": {
+    "shortlist-backend": "*"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "11.0.1",
+    "@types/node": "22.10.5",
+    "@types/supertest": "7.2.0",
+    "supertest": "7.0.0",
+    "typescript": "5.7.3",
+    "vitest": "3.2.3"
+  }
+}
