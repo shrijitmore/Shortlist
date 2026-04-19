@@ -10,6 +10,7 @@ import { Toast } from './components/Toast';
 import { MapComponent } from './components/MapComponent';
 import { postIntake, postClarify, postShortlist, createSSEConnection } from './api';
 import { AppStep, ShortlistResult, StreamEvent } from './types';
+import { Bell, Settings, Star, ArrowLeftRight, Car, History } from 'lucide-react';
 import { theme } from './theme';
 
 const MAX_CLARIFY_QUESTIONS = 5;
@@ -27,7 +28,6 @@ export default function App() {
 
   const sseRef = useRef<EventSource | null>(null);
 
-  // Single effect: SSE cleanup + SPA back-button popstate listener
   useEffect(() => {
     const handlePop = (e: PopStateEvent) => {
       const prev: AppStep = (e.state as { step?: AppStep })?.step || 'input';
@@ -50,52 +50,42 @@ export default function App() {
     setCurrentStage(event.stage);
   };
 
-  // ── Step 1: User submits paragraph ───────────────────────────────────────
   const handleIntakeSubmit = async (text: string) => {
     setStreamEvents([]);
     setCurrentStage('');
-
     try {
       const { requestId: rid } = await postIntake(text, setIsLoading);
       setRequestId(rid);
-
       const es = createSSEConnection(rid, addStreamEvent);
       sseRef.current = es;
-
       const { question, options } = await postClarify(rid, setIsLoading);
       setClarifyQuestion(question);
       setClarifyOptions(options);
       setClarifyQuestionNumber(1);
       goToStep('clarify');
     } catch {
-      // api.ts already showed the toast; nothing else to do
+      // api.ts already showed the toast
     }
   };
 
-  // ── Step 2: User selects clarifier chip ──────────────────────────────────
   const handleClarifySelect = async (answer: string) => {
     if (!requestId) return;
-
     try {
       const result = await postShortlist(requestId, answer, setIsLoading);
-
       if (result.needsMoreClarification && result.nextQuestion) {
         setClarifyQuestion(result.nextQuestion.question);
         setClarifyOptions(result.nextQuestion.options);
         setClarifyQuestionNumber(result.nextQuestion.questionNumber);
         return;
       }
-
       setShortlist(result.shortlist);
       goToStep('loading');
       setTimeout(() => goToStep('results'), 600);
     } catch {
-      // api.ts already showed the toast
       goToStep('input');
     }
   };
 
-  // ── Reset ─────────────────────────────────────────────────────────────────
   const handleReset = () => {
     sseRef.current?.close();
     sseRef.current = null;
@@ -114,60 +104,135 @@ export default function App() {
     ? [shortlist.topPick, shortlist.alternative, shortlist.surprise]
     : [];
 
+  const showSideNav = step === 'results';
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background text-on-background font-body antialiased">
       <Toast />
 
-      {/* Nav */}
+      {/* Top Nav */}
       <header
-        className="fixed top-0 left-0 right-0 z-40 backdrop-blur-xl border-b border-white/5"
+        className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-6 h-16 border-b border-stone-200 shadow-sm"
         style={{ background: theme.bg.nav }}
       >
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2.5">
-            <div
-              className="w-7 h-7 rounded-lg flex items-center justify-center"
-              style={{ background: theme.gradient.logoBg }}
-            >
-              <span className="text-sm">✦</span>
-            </div>
-            <span className="font-bold text-white text-base tracking-tight">Shortlist</span>
-            <span className="hidden sm:inline text-xs text-zinc-600 font-medium">for Indian car buyers</span>
-          </motion.div>
-
-          {step !== 'input' && (
-            <motion.button
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              onClick={handleReset}
-              className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
-            >
-              ← Start over
-            </motion.button>
-          )}
+        <div className="flex items-center gap-4">
+          <span className="text-xl font-bold tracking-tight text-stone-900">Shortlist</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button className="text-stone-600 hover:text-stone-900 hover:bg-stone-100 transition-colors p-2 rounded-full flex items-center justify-center">
+            <Bell size={20} />
+          </button>
+          <button className="text-stone-600 hover:text-stone-900 hover:bg-stone-100 transition-colors p-2 rounded-full flex items-center justify-center">
+            <Settings size={20} />
+          </button>
+          <div className="w-8 h-8 rounded-full bg-surface-container-high border border-outline-variant overflow-hidden flex items-center justify-center">
+            <span className="text-sm font-bold text-primary">S</span>
+          </div>
         </div>
       </header>
 
-      {/* Main content */}
-      <main className="flex-1 flex flex-col items-center justify-center pt-20 pb-32 px-4 sm:px-6">
-        <div className="w-full max-w-5xl">
+      <div className="flex flex-1 pt-16">
+        {/* Side Nav — only on results */}
+        {showSideNav && (
+          <nav
+            className="hidden md:flex flex-col fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 border-r border-stone-200 p-4 gap-2 z-40"
+            style={{ background: theme.bg.sideNav }}
+          >
+            <div className="mb-8 px-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center text-on-primary-container font-bold text-xl">
+                  A
+                </div>
+                <div>
+                  <div className="text-lg font-semibold" style={{ color: theme.bg.accentText }}>Atelier</div>
+                  <div className="text-xs text-stone-500">Curated Selection</div>
+                </div>
+              </div>
+            </div>
+            <a className="bg-white text-primary shadow-sm rounded-lg flex items-center gap-3 px-4 py-3 cursor-pointer select-none" href="#">
+              <Star size={18} />
+              Recommendations
+            </a>
+            <button
+              onClick={handleReset}
+              className="text-stone-600 hover:bg-stone-100 hover:translate-x-1 transition-all duration-200 rounded-lg flex items-center gap-3 px-4 py-3 cursor-pointer select-none text-sm font-medium"
+            >
+              <ArrowLeftRight size={18} />
+              New Search
+            </button>
+            <a className="text-stone-600 hover:bg-stone-100 hover:translate-x-1 transition-all duration-200 rounded-lg flex items-center gap-3 px-4 py-3 cursor-pointer select-none" href="#">
+              <Car size={18} />
+              Garage
+            </a>
+            <a className="text-stone-600 hover:bg-stone-100 hover:translate-x-1 transition-all duration-200 rounded-lg flex items-center gap-3 px-4 py-3 cursor-pointer select-none" href="#">
+              <History size={18} />
+              History
+            </a>
+          </nav>
+        )}
+
+        {/* Main */}
+        <main className={`flex-1 relative min-h-[calc(100vh-4rem)] ${showSideNav ? 'md:ml-64' : ''}`}>
           <AnimatePresence mode="wait">
             {step === 'input' && (
-              <motion.div key="input" exit={{ opacity: 0, x: -60 }} transition={{ duration: 0.4 }}>
-                <HeroInput onSubmit={handleIntakeSubmit} isLoading={isLoading} />
+              <motion.div
+                key="input"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, x: -40 }}
+                transition={{ duration: 0.4 }}
+                className="flex flex-col justify-center items-center min-h-[calc(100vh-4rem)] relative"
+              >
+                {/* Hero background image overlay */}
+                <div className="absolute inset-0 z-0 overflow-hidden">
+                  <div
+                    className="absolute inset-0 z-10 backdrop-blur-[2px]"
+                    style={{ background: theme.bg.heroOverlay }}
+                  />
+                  <img
+                    src="https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=1600&q=80"
+                    alt=""
+                    className="w-full h-full object-cover opacity-60"
+                    aria-hidden="true"
+                  />
+                </div>
+                <div className="relative z-20 w-full px-4">
+                  <HeroInput onSubmit={handleIntakeSubmit} isLoading={isLoading} />
+                </div>
               </motion.div>
             )}
 
             {step === 'clarify' && (
-              <motion.div key="clarify" className="flex flex-col items-center">
-                <ProgressStepper current={1} questionNumber={clarifyQuestionNumber} />
-                <div className="w-full max-w-2xl">
+              <motion.div
+                key="clarify"
+                initial={{ opacity: 0, x: 40 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -40 }}
+                transition={{ duration: 0.4 }}
+                className="flex flex-col items-center min-h-[calc(100vh-4rem)] relative"
+              >
+                {/* Background overlay */}
+                <div className="absolute inset-0 z-0 overflow-hidden">
+                  <div
+                    className="absolute inset-0 z-10"
+                    style={{ background: theme.bg.clarifyOverlay }}
+                  />
+                  <img
+                    src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&q=80"
+                    alt=""
+                    className="w-full h-full object-cover object-center opacity-30 mix-blend-multiply"
+                    aria-hidden="true"
+                  />
+                </div>
+                <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-12 max-w-4xl mx-auto w-full">
+                  <StepProgressBars current={0} />
                   <ClarifyChips
                     question={clarifyQuestion}
                     options={clarifyOptions}
                     questionNumber={clarifyQuestionNumber}
                     maxQuestions={MAX_CLARIFY_QUESTIONS}
                     onSelect={handleClarifySelect}
+                    onBack={handleReset}
                     isLoading={isLoading}
                   />
                 </div>
@@ -175,56 +240,77 @@ export default function App() {
             )}
 
             {step === 'loading' && (
-              <motion.div key="loading" className="flex flex-col items-center">
-                <ProgressStepper current={2} questionNumber={clarifyQuestionNumber} />
-                <div className="w-full max-w-lg">
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+                className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] p-6 relative overflow-hidden"
+              >
+                {/* Gradient blobs */}
+                <div className="absolute inset-0 pointer-events-none opacity-40">
+                  <div className="absolute inset-0" style={{ background: theme.bg.loadingBlob }} />
+                  <div className="absolute top-[-20%] right-[-10%] w-[70%] h-[70%] rounded-full opacity-30 blur-3xl" style={{ background: theme.bg.loadingOrb1 }} />
+                  <div className="absolute bottom-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full opacity-20 blur-3xl" style={{ background: theme.bg.loadingOrb2 }} />
+                </div>
+                <div className="relative z-10 w-full max-w-2xl">
                   <LoadingStream events={streamEvents} currentStage={currentStage} />
                 </div>
               </motion.div>
             )}
 
             {step === 'results' && shortlist && (
-              <motion.div key="results" exit={{ opacity: 0 }}>
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-center mb-10"
-                >
-                  <ProgressStepper current={3} questionNumber={clarifyQuestionNumber} />
-                  <h2 className="text-2xl sm:text-3xl font-black text-white mt-6 mb-2">Your Shortlist</h2>
-                  {shortlist.latentPersona && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.3 }}
-                      className="inline-block px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[11px] font-bold uppercase tracking-widest mb-2"
-                    >
-                      {shortlist.latentPersona}
-                    </motion.div>
-                  )}
-                  <p className="text-zinc-500 text-sm">3 picks, curated exactly for your situation</p>
-                </motion.div>
+              <motion.div
+                key="results"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+                className="flex-1 overflow-y-auto pb-32"
+                style={{ background: theme.bg.resultsGradient }}
+              >
+                <div className="max-w-6xl mx-auto px-6 py-12">
+                  <header className="mb-12">
+                    <h1 className="text-4xl md:text-5xl font-headline font-bold text-on-surface mb-4">
+                      Your Curated Collection
+                    </h1>
+                    {shortlist.latentPersona && (
+                      <div className="inline-block px-4 py-1.5 rounded-full bg-surface-container border border-surface-variant text-on-surface-variant text-sm font-label mb-4">
+                        {shortlist.latentPersona}
+                      </div>
+                    )}
+                    <p className="text-lg text-on-surface-variant max-w-2xl font-body">
+                      Based on your preferences, we've handpicked these three exceptional vehicles for your consideration.
+                    </p>
+                  </header>
 
-                <MapComponent
-                  items={resultCards}
-                  keyExtractor={(rc) => rc.car.id}
-                  className="grid grid-cols-1 md:grid-cols-3 gap-6"
-                  renderItem={(rc, i) => <RecoCard rankedCar={rc} index={i} />}
-                />
+                  <MapComponent
+                    items={resultCards}
+                    keyExtractor={(rc) => rc.car.id}
+                    className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+                    renderItem={(rc, i) => <RecoCard rankedCar={rc} index={i} />}
+                  />
 
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 1 }}
-                  className="text-center text-xs text-zinc-700 mt-8"
-                >
-                  Prices are indicative ex-showroom ranges. Verify OTR pricing, availability, and specs with your local dealer before purchase.
-                </motion.p>
+                  <p className="text-center text-xs text-on-surface-variant mt-10">
+                    Prices are indicative ex-showroom ranges. Verify OTR pricing, availability, and specs with your local dealer before purchase.
+                  </p>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
+        </main>
+      </div>
+
+      {/* Footer */}
+      <footer className="bg-stone-50 border-t border-stone-200 flex justify-between items-center px-8 py-4 w-full relative z-50 text-xs">
+        <div className="font-bold text-stone-400">© 2024 Shortlist Automotive</div>
+        <div className="flex gap-6">
+          <a className="text-stone-500 hover:underline transition-opacity hover:opacity-80" style={{ textDecorationColor: theme.bg.accentText }} href="#">Privacy</a>
+          <a className="text-stone-500 hover:underline transition-opacity hover:opacity-80" style={{ textDecorationColor: theme.bg.accentText }} href="#">Terms</a>
+          <a className="text-stone-500 hover:underline transition-opacity hover:opacity-80" style={{ textDecorationColor: theme.bg.accentText }} href="#">Support</a>
         </div>
-      </main>
+      </footer>
 
       {step === 'results' && shortlist && (
         <CompareBar
@@ -239,38 +325,21 @@ export default function App() {
   );
 }
 
-// ── Internal: step breadcrumb ──────────────────────────────────────────────
-function ProgressStepper({ current, questionNumber }: { current: number; questionNumber: number }) {
-  const clarifyLabel = questionNumber > 1 ? `Clarifying (${questionNumber})` : 'Clarifying';
-  const steps = ['Your story', clarifyLabel, 'Your shortlist'];
-
+// Step 2/3 progress bars (3 segments)
+function StepProgressBars({ current }: { current: number }) {
+  const bars = [0, 1, 2];
   return (
-    <div className="flex items-center gap-1.5 sm:gap-2 mb-8 flex-wrap justify-center">
+    <div className="mb-8 flex items-center gap-2">
       <MapComponent
-        items={steps}
-        keyExtractor={(_, i) => i}
-        renderItem={(label, i) => {
-          const isDone = i < current;
-          const isCurrent = i === current;
-          return (
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="flex items-center gap-1 sm:gap-1.5">
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-500 ${
-                  isDone ? 'bg-indigo-500 text-white' : isCurrent ? 'bg-indigo-500/30 border border-indigo-500 text-indigo-300' : 'bg-white/5 border border-white/10 text-zinc-600'
-                }`}>
-                  {isDone ? '✓' : i + 1}
-                </div>
-                <span className={`text-xs font-medium transition-colors ${isCurrent ? 'text-white' : isDone ? 'text-indigo-400' : 'text-zinc-600'}`}>
-                  {label}
-                </span>
-              </div>
-              {i < steps.length - 1 && (
-                <div className={`w-6 sm:w-8 h-px transition-colors ${isDone ? 'bg-indigo-500/50' : 'bg-white/8'}`} />
-              )}
-            </div>
-          );
-        }}
+        items={bars}
+        keyExtractor={(i) => i}
+        renderItem={(_, i) => (
+          <div className={`h-2 w-12 rounded-full transition-colors duration-300 ${i <= current ? 'bg-primary' : 'bg-surface-variant'}`} />
+        )}
       />
+      <span className="ml-4 text-sm font-medium text-on-surface-variant font-label uppercase tracking-wider">
+        Step {current + 2} of 4
+      </span>
     </div>
   );
 }

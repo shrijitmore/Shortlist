@@ -1,9 +1,8 @@
 // src/components/ClarifyChips.tsx
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircleQuestion, ArrowRight, Send } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { ArrowLeft, ArrowRight, Leaf, Users, Gauge, Wallet, Navigation, Car, Send } from 'lucide-react';
 import { MapComponent } from './MapComponent';
-import { theme } from '../theme';
 
 interface Props {
   question: string;
@@ -11,36 +10,38 @@ interface Props {
   questionNumber: number;
   maxQuestions: number;
   onSelect: (answer: string) => void;
+  onBack: () => void;
   isLoading: boolean;
 }
 
-export function ClarifyChips({ question, options, questionNumber, maxQuestions, onSelect, isLoading }: Props) {
+// Map keywords in option text to lucide icons
+function getOptionIcon(option: string) {
+  const lower = option.toLowerCase();
+  if (/eco|electric|hybrid|green|ev|fuel/.test(lower))    return <Leaf size={24} className="text-primary" />;
+  if (/family|seat|space|room|kids|child/.test(lower))     return <Users size={24} className="text-primary" />;
+  if (/perfo|speed|sport|power|fast/.test(lower))          return <Gauge size={24} className="text-primary" />;
+  if (/budget|afford|cost|cheap|value/.test(lower))        return <Wallet size={24} className="text-primary" />;
+  if (/highway|long|distance|commut|route/.test(lower))    return <Navigation size={24} className="text-primary" />;
+  return <Car size={24} className="text-primary" />;
+}
+
+export function ClarifyChips({ question, options, questionNumber, maxQuestions, onSelect, onBack, isLoading }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
-  const [customText, setCustomText] = useState('');
-  const [isFocused, setIsFocused] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [customAnswer, setCustomAnswer] = useState('');
 
-  useEffect(() => {
-    setSelected(null);
-    setCustomText('');
-  }, [question]);
+  useEffect(() => { setSelected(null); setCustomAnswer(''); }, [question]);
 
-  const handleChipSelect = (option: string) => {
+  const handleSelect = (option: string) => {
     if (isLoading) return;
     setSelected(option);
-    setCustomText('');
     onSelect(option);
   };
 
-  const handleCustomSubmit = () => {
-    const trimmed = customText.trim();
-    if (!trimmed || isLoading) return;
-    setSelected(null);
+  const handleSubmitCustom = () => {
+    const trimmed = customAnswer.trim();
+    if (isLoading || trimmed.length === 0) return;
+    setSelected(trimmed);
     onSelect(trimmed);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') handleCustomSubmit();
   };
 
   const dots: number[] = [];
@@ -52,136 +53,106 @@ export function ClarifyChips({ question, options, questionNumber, maxQuestions, 
       initial={{ opacity: 0, x: 60 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="w-full max-w-2xl mx-auto"
+      className="w-full max-w-4xl"
     >
-      <div className="flex items-start gap-4 mb-8">
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2, type: 'spring', stiffness: 300 }}
-          className="flex-shrink-0 w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center"
-        >
-          <MessageCircleQuestion size={20} className="text-indigo-400" />
-        </motion.div>
-
-        <div className="flex-1">
-          <div className="flex items-center justify-between mb-2">
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              className="text-xs font-semibold uppercase tracking-widest text-indigo-400"
-            >
-              Question {questionNumber} of up to {maxQuestions}
-            </motion.p>
-            <div className="flex items-center gap-1">
-              <MapComponent
-                items={dots}
-                keyExtractor={(i) => i}
-                renderItem={(_, i) => (
-                  <div className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${i < questionNumber ? 'bg-indigo-500' : 'bg-white/10'}`} />
-                )}
-              />
-            </div>
-          </div>
-          <motion.h2
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-xl sm:text-2xl font-bold text-white leading-snug"
-          >
-            {question}
-          </motion.h2>
-        </div>
+      {/* Question counter dots */}
+      <div className="flex items-center gap-1.5 mb-6">
+        <MapComponent
+          items={dots}
+          keyExtractor={(i) => i}
+          renderItem={(_, i) => (
+            <div className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              i < questionNumber ? 'bg-primary' : 'bg-surface-variant'
+            }`} />
+          )}
+        />
+        <span className="ml-2 text-xs text-on-surface-variant font-label">
+          Question {questionNumber} of up to {maxQuestions}
+        </span>
       </div>
 
+      {/* Header */}
+      <div className="text-center mb-12 max-w-2xl mx-auto">
+        <h1 className="text-4xl md:text-5xl font-bold font-headline text-on-surface mb-4">
+          Refine your profile.
+        </h1>
+        <p className="text-lg md:text-xl text-on-surface-variant font-body">{question}</p>
+      </div>
+
+      {/* Bento chip grid */}
       <MapComponent
         items={options}
         keyExtractor={(o) => o}
-        className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+        className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 w-full mb-12"
         renderItem={(option, i) => (
           <motion.button
             id={`chip-${i}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 * i + 0.3, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            onClick={() => handleChipSelect(option)}
+            transition={{ delay: 0.05 * i + 0.15, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            onClick={() => handleSelect(option)}
             disabled={isLoading}
-            className={`chip text-left group relative overflow-hidden ${selected === option ? 'selected' : ''} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`chip ${selected === option ? 'selected' : ''} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            {selected === option && (
-              <motion.div
-                layoutId="chip-selection"
-                className="absolute inset-0 rounded-xl"
-                style={{ background: theme.bg.chipSelected, border: theme.bg.chipSelectedBorder }}
-              />
+            <span className="mb-4 block">{getOptionIcon(option)}</span>
+            <span className="font-semibold text-lg font-label block leading-snug">{option}</span>
+            {selected === option && isLoading && (
+              <span className="mt-2 w-4 h-4 border-2 border-on-primary/30 border-t-on-primary rounded-full animate-spin block" />
             )}
-            <span className="relative z-10 flex items-center justify-between">
-              <span className="text-sm leading-snug">{option}</span>
-              {selected === option && (
-                <motion.span initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} className="ml-2 flex-shrink-0">
-                  {isLoading
-                    ? <span className="w-4 h-4 border-2 border-indigo-400/30 border-t-indigo-400 rounded-full animate-spin block" />
-                    : <ArrowRight size={14} className="text-indigo-400" />}
-                </motion.span>
-              )}
-            </span>
           </motion.button>
         )}
       />
 
-      {/* Free-text input */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7 }}
-        className="mt-4"
-      >
-        <div
-          className={`flex items-center gap-2 rounded-xl border px-4 py-3 transition-all duration-200 ${
-            isFocused ? 'border-indigo-500/40' : 'border-white/8'
-          }`}
-          style={{ background: isFocused ? theme.bg.textInputFocus : theme.bg.textInput }}
+      {/* Free-text input — alternative to chips */}
+      <div className="mb-10">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="h-px flex-1 bg-outline-variant/40" />
+          <span className="text-sm font-label text-on-surface-variant">or type your own answer</span>
+          <div className="h-px flex-1 bg-outline-variant/40" />
+        </div>
+        <form
+          onSubmit={(e) => { e.preventDefault(); handleSubmitCustom(); }}
+          className="flex items-center gap-2"
         >
           <input
-            ref={inputRef}
             type="text"
-            value={customText}
-            onChange={(e) => setCustomText(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
+            value={customAnswer}
+            onChange={(e) => setCustomAnswer(e.target.value)}
             disabled={isLoading}
-            placeholder="Or describe your situation in your own words…"
-            className="flex-1 bg-transparent text-sm text-white placeholder-zinc-600 outline-none disabled:opacity-40"
+            placeholder="e.g. I mostly drive in mountainous regions…"
+            className="flex-1 px-4 py-3 rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface font-body placeholder:text-on-surface-variant/60 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary disabled:opacity-50"
           />
-          <AnimatePresence>
-            {customText.trim().length > 0 && (
-              <motion.button
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                onClick={handleCustomSubmit}
-                disabled={isLoading}
-                className="flex-shrink-0 w-7 h-7 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 hover:bg-indigo-500/30 transition-colors disabled:opacity-40"
-              >
-                {isLoading
-                  ? <span className="w-3.5 h-3.5 border-2 border-indigo-400/30 border-t-indigo-400 rounded-full animate-spin block" />
-                  : <Send size={12} />}
-              </motion.button>
-            )}
-          </AnimatePresence>
-        </div>
-      </motion.div>
+          <button
+            type="submit"
+            disabled={isLoading || customAnswer.trim().length === 0}
+            className="px-5 py-3 rounded-lg bg-primary text-on-primary font-label font-semibold flex items-center gap-2 hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <Send size={16} />
+            Send
+          </button>
+        </form>
+      </div>
 
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.9 }}
-        className="text-xs text-zinc-600 text-center mt-4"
-      >
-        Pick an option above or type your own context below
-      </motion.p>
+      {/* Action row */}
+      <div className="flex flex-col sm:flex-row items-center gap-4 justify-between pt-8 border-t border-outline-variant/30">
+        <button
+          onClick={onBack}
+          className="px-6 py-3 text-on-surface font-medium font-label hover:bg-surface-container rounded-lg transition-colors flex items-center gap-2"
+        >
+          <ArrowLeft size={18} />
+          Back
+        </button>
+        {selected && !isLoading && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-sm text-on-surface-variant font-label flex items-center gap-2"
+          >
+            <ArrowRight size={16} className="text-primary" />
+            Proceeding with "{selected}"…
+          </motion.p>
+        )}
+      </div>
     </motion.div>
   );
 }

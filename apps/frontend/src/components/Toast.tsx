@@ -5,9 +5,9 @@ import { subscribeToasts, ToastItem } from '../toast';
 import { MapComponent } from './MapComponent';
 
 const TYPE_STYLES: Record<ToastItem['type'], string> = {
-  success: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300',
-  error:   'border-red-500/30 bg-red-500/10 text-red-300',
-  info:    'border-indigo-500/30 bg-indigo-500/10 text-indigo-300',
+  success: 'border-green-600/30 bg-green-50 text-green-800',
+  error:   'border-error/30 bg-error-container text-on-error-container',
+  info:    'border-primary/30 bg-surface-container text-on-surface',
 };
 
 const TYPE_ICON: Record<ToastItem['type'], string> = {

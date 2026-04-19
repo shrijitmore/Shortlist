@@ -2,6 +2,7 @@
 
 A conversational car-buying assistant for the Indian market. Users describe their situation in plain language; the system clarifies ambiguities, retrieves candidates from a local SQLite database, and returns three ranked picks with personalised rationale.
 
+**Live app:** https://shortlist-frontend-seven.vercel.app  
 **GitHub:** https://github.com/shrijitmore/Shortlist.git  
 **Screen recording:** https://drive.google.com/drive/folders/1XVbxSqhjuUuJ_rTQVUJVSm-izuccGL8u?usp=sharing
 
@@ -11,7 +12,7 @@ A conversational car-buying assistant for the Indian market. Users describe thei
 
 **The core bet:** Car buyers don't fail because of missing specs; they fail because no tool speaks their language. Someone who types "family of 4 in Pune, scared of parking, 15 lakhs" doesn't know what a compact SUV is. I built the interface that meets them there.
 
-The flow: free-text intake → one AI-generated clarifying question → deterministic retrieval + scoring → three ranked picks (top, alternative, surprise) with personalised rationale quoting the user's own words → a compare verdict.
+The flow: free-text intake → one AI-generated clarifying question (user picks a chip **or** types a free-form answer) → deterministic retrieval + scoring → three ranked picks (top, alternative, surprise) with personalised rationale quoting the user's own words → a compare verdict.
 
 ## What I Cut (and Would Build With More Time)
 
@@ -73,9 +74,28 @@ docker-compose up --build
 ### Local
 ```bash
 npm install
-cd apps/backend && npm run seed && npm run start:dev   # terminal 1
-cd apps/frontend && npm run dev                         # terminal 2
+
+# terminal 1 — backend (seeds SQLite then starts NestJS on :3001)
+cd apps/backend
+npm run build:scripts && npm run seed:prod
+npm run start:dev
+
+# terminal 2 — frontend (Vite on :5173, auto-loads .env.development → localhost:3001)
+cd apps/frontend && npm run dev
 ```
+
+Frontend environment files:
+- `.env.development` → `VITE_API_URL=http://localhost:3001` (used by `npm run dev`)
+- `.env.production`  → `VITE_API_URL=https://shortlist-113087462794.asia-south1.run.app` (used by Vercel builds)
+
+### Deployment
+
+| Surface | Platform | Triggered by |
+|---|---|---|
+| Backend | Google Cloud Run (`asia-south1`, 1 GiB) | `cloudbuild.yaml` → Cloud Build on push to `main` |
+| Frontend | Vercel | Auto-deploy on push to `main` |
+
+Backend build: `cloudbuild.yaml` at repo root runs `docker build apps/backend`, pushes to GCR, deploys to the `shortlist` Cloud Run service. The Dockerfile is a multi-stage Alpine build — compiles `better-sqlite3` native addons in the builder, copies the pruned `node_modules` into a slim runtime stage, runs as non-root, seeds SQLite then `exec`s `node dist/main` via `start.sh`.
 
 ### Run Tests
 ```bash

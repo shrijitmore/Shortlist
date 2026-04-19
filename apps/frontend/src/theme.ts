@@ -1,31 +1,28 @@
-// src/theme.ts — single source of truth for all inline style values
-// Tailwind utility classes live in index.css; this file covers values
-// that cannot be expressed as Tailwind classes (rgba, specific gradients, etc.)
+// src/theme.ts — inline style values that can't be expressed as Tailwind classes
+// All color tokens are in tailwind.config.js; this file covers rgba/gradient values only.
 
 export const theme = {
   bg: {
-    nav:        'rgba(10,10,20,0.7)',
-    compareBar: 'rgba(10,10,20,0.9)',
-    modal:      'rgba(15,15,30,0.97)',
-    card:       'rgba(255,255,255,0.035)',
-    chipSelected:       'rgba(99,102,241,0.15)',
-    chipSelectedBorder: '1px solid rgba(99,102,241,0.5)',
-    becauseYouSaid:     'rgba(99,102,241,0.06)',
-    rankCardOverlay:    'rgba(255,255,255,0.035)',
-    textInput:          'rgba(255,255,255,0.04)',
-    textInputFocus:     'rgba(99,102,241,0.08)',
-  },
-  gradient: {
-    logoBg:        'linear-gradient(135deg, #7c3aed, #4f46e5)',
-    primaryBtn:    'linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #2563eb 100%)',
-    primaryBtnHover: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #3b82f6 100%)',
-    inputGlowBlur: 'linear-gradient(135deg, rgba(99,102,241,0.6) 0%, rgba(139,92,246,0.4) 100%)',
-  },
-  color: {
-    price:    '#a78bfa',
-    indigo:   '#6366f1',
+    nav:              '#fdfbf9',
+    sideNav:          '#fcf8f2',
+    accentText:       '#ee8732',
+    compareBar:       'rgba(255, 248, 243, 0.96)',
+    modal:            'rgba(255, 248, 243, 0.98)',
+    heroOverlay:      'linear-gradient(to bottom, rgba(255,248,243,0.80), rgba(255,248,243,0.95))',
+    clarifyOverlay:   'linear-gradient(to bottom, rgba(255,248,243,0.90), rgba(243,214,170,0.90))',
+    resultsGradient:  'linear-gradient(135deg, #fff8f3, #fff2e2)',
+    loadingBlob:      'linear-gradient(135deg, #fcdeb2, #fff8f3, #ffe4be)',
+    loadingOrb1:      'radial-gradient(circle, #ffb784, transparent)',
+    loadingOrb2:      'radial-gradient(circle, #fadebe, transparent)',
+    becauseYouSaid:   'rgba(145, 72, 0, 0.06)',
+    inputGlow:        'linear-gradient(135deg, rgba(180,92,0,0.2), rgba(189,87,0,0.2))',
+    modalShadow:      '0_-4px_6px_-1px_rgba(0,0,0,0.05)',
   },
   blur: {
-    modal: 'blur(24px)',
+    modal: 'blur(20px)',
+  },
+  border: {
+    accentUnderline: '#ee8732',
+    compareBarShadow: '0 -4px 6px -1px rgba(0,0,0,0.05)',
   },
 } as const;

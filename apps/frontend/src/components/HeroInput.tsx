@@ -1,7 +1,7 @@
 // src/components/HeroInput.tsx
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, ArrowRight, ChevronDown } from 'lucide-react';
+import { Sparkles, ArrowRight, Zap, Users, Mountain } from 'lucide-react';
 import { MapComponent } from './MapComponent';
 import { theme } from '../theme';
 
@@ -10,167 +10,145 @@ interface Props {
   isLoading: boolean;
 }
 
-const PLACEHOLDER = `Family of 4 in Pune, 15L OTR, mostly city driving, Ooty once a year, wife finds parking scary, no clue about fuel type...`;
-
-const EXAMPLES = [
-  'First car buyer in Bangalore, budget ₹8L, mostly office commute 25km daily, safety is my top priority.',
-  'Couple in Mumbai, ₹20L budget, weekend highway trips, want automatic, considering EV if charging is sorted.',
-  'Joint family of 6 in Delhi, ₹12L max, need 7 seats, CNG or petrol, driver drives daily 50km.',
+const QUICK_PICKS = [
+  {
+    icon: <Zap size={22} className="text-primary" />,
+    title: 'Electric Commuters',
+    subtitle: 'Efficient daily drivers',
+    prompt: 'I need an electric car for daily city commuting, budget around ₹15L, easy to charge.',
+  },
+  {
+    icon: <Users size={22} className="text-tertiary" />,
+    title: 'Family Haulers',
+    subtitle: '7-seats and safety first',
+    prompt: 'Family of 5, need 7-seater SUV, budget ₹20L, safety is top priority, mostly highway.',
+  },
+  {
+    icon: <Mountain size={22} className="text-secondary" />,
+    title: 'Weekend Adventures',
+    subtitle: 'AWD and cargo space',
+    prompt: 'Couple in Bangalore, weekend road trips to Coorg and Ooty, need AWD, budget ₹25L.',
+  },
 ];
-
-const BADGES = ['20 Indian car models', '5 fuel types covered', 'Zero spam, no login'];
 
 export function HeroInput({ onSubmit, isLoading }: Props) {
   const [text, setText] = useState('');
-  const [showExamples, setShowExamples] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (text.trim().length >= 10) onSubmit(text.trim());
   };
 
-  const charCount = text.length;
-  const isValid = charCount >= 10;
+  const isValid = text.trim().length >= 10;
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-      className="w-full max-w-3xl mx-auto"
+      className="w-full max-w-3xl mx-auto flex flex-col items-center text-center px-6 py-12"
     >
-      <div className="text-center mb-10">
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.1, duration: 0.6 }}
-          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-sm font-medium mb-6"
-        >
-          <Sparkles size={14} className="text-indigo-400" />
-          AI-powered shortlisting for Indian buyers
-        </motion.div>
+      {/* Step pill */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.1 }}
+        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface-container border border-surface-variant text-on-surface-variant text-sm font-label mb-8"
+      >
+        <Sparkles size={14} className="text-primary" />
+        Step 1 of 4
+      </motion.div>
 
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.7 }}
-          className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight mb-4"
-        >
-          <span className="gradient-text">Find your</span>
-          <br />
-          <span className="text-white">perfect car.</span>
-        </motion.h1>
+      {/* Headline */}
+      <motion.h1
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.7 }}
+        className="text-5xl md:text-6xl font-headline font-semibold text-on-surface mb-6 tracking-tight"
+      >
+        Find your ideal drive.
+      </motion.h1>
 
-        <motion.p
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.6 }}
-          className="text-zinc-400 text-base sm:text-lg max-w-xl mx-auto"
-        >
-          Just describe your situation in plain language.
-          We'll ask smart questions, then shortlist exactly 3 cars for you.
-        </motion.p>
-      </div>
+      <motion.p
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.6 }}
+        className="text-lg text-on-surface-variant mb-12 max-w-xl font-body leading-relaxed"
+      >
+        Tell us what you're looking for — a family SUV, a city commuter, or a sporty weekend car?
+      </motion.p>
 
+      {/* Search input row */}
       <motion.form
         onSubmit={handleSubmit}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, duration: 0.6 }}
-        className="space-y-4"
+        className="w-full relative group"
       >
-        <div className="relative group">
-          <div
-            className="absolute -inset-0.5 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500"
-            style={{ background: theme.gradient.inputGlowBlur, filter: 'blur(8px)' }}
-          />
-          <div className="relative glass-card overflow-hidden">
-            <textarea
+        <div className="absolute -inset-1 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500 blur"
+          style={{ background: theme.bg.inputGlow }}
+        />
+        <div className="relative bg-surface rounded-xl shadow-md border border-outline-variant p-2 flex flex-col sm:flex-row gap-2">
+          <div className="flex-1 flex items-center px-4">
+            <input
               id="hero-input"
               value={text}
               onChange={e => setText(e.target.value)}
-              placeholder={PLACEHOLDER}
-              rows={5}
-              className="w-full bg-transparent px-6 pt-5 pb-16 text-base text-zinc-100 placeholder-zinc-600 resize-none focus:outline-none leading-relaxed"
+              placeholder="e.g. 'Family of 4 in Pune, ₹15L budget, mostly city driving…'"
+              className="w-full bg-transparent border-none focus:ring-0 text-on-surface placeholder:text-outline/70 font-body text-base h-14 outline-none"
               autoFocus
             />
-            <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-5 py-3 border-t border-white/5">
-              <span className={`text-xs font-medium transition-colors ${isValid ? 'text-zinc-500' : 'text-zinc-700'}`}>
-                {charCount < 10 ? `${10 - charCount} more characters…` : `${charCount} characters`}
-              </span>
-              <motion.button
-                type="submit"
-                disabled={!isValid || isLoading}
-                whileHover={isValid && !isLoading ? { scale: 1.02 } : {}}
-                whileTap={isValid && !isLoading ? { scale: 0.98 } : {}}
-                className="btn-primary text-sm px-5 py-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
-                id="submit-btn"
-              >
-                {isLoading ? (
-                  <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Processing…
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-2 relative z-10">
-                    Shortlist my car
-                    <ArrowRight size={16} />
-                  </span>
-                )}
-              </motion.button>
-            </div>
           </div>
-        </div>
-
-        <div>
-          <button
-            type="button"
-            onClick={() => setShowExamples(v => !v)}
-            className="flex items-center gap-1.5 text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
+          <motion.button
+            type="submit"
+            disabled={!isValid || isLoading}
+            whileHover={isValid && !isLoading ? { scale: 1.02 } : {}}
+            whileTap={isValid && !isLoading ? { scale: 0.98 } : {}}
+            className="btn-primary text-sm px-8 whitespace-nowrap flex-shrink-0"
+            id="submit-btn"
           >
-            <ChevronDown size={14} className={`transition-transform ${showExamples ? 'rotate-180' : ''}`} />
-            Show example inputs
-          </button>
-
-          {showExamples && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-3 space-y-2"
-            >
-              <MapComponent
-                items={EXAMPLES}
-                keyExtractor={(_, i) => i}
-                renderItem={(ex) => (
-                  <button
-                    type="button"
-                    onClick={() => { setText(ex); setShowExamples(false); }}
-                    className="w-full text-left px-4 py-3 rounded-xl border border-white/8 bg-white/3 text-zinc-500 text-xs hover:text-zinc-300 hover:border-indigo-500/30 hover:bg-indigo-500/5 transition-all"
-                  >
-                    "{ex}"
-                  </button>
-                )}
-              />
-            </motion.div>
-          )}
+            {isLoading ? (
+              <span className="flex items-center gap-2">
+                <span className="w-4 h-4 border-2 border-on-primary/30 border-t-on-primary rounded-full animate-spin" />
+                Processing…
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                Explore
+                <ArrowRight size={18} />
+              </span>
+            )}
+          </motion.button>
         </div>
       </motion.form>
 
+      {/* Popular Starting Points */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.8, duration: 0.6 }}
-        className="flex items-center justify-center gap-4 sm:gap-6 mt-10 flex-wrap"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6, duration: 0.6 }}
+        className="mt-16 w-full text-left"
       >
+        <h3 className="text-sm font-label font-medium text-on-surface-variant mb-4 px-2 uppercase tracking-wider">
+          Popular Starting Points
+        </h3>
         <MapComponent
-          items={BADGES}
-          keyExtractor={(b) => b}
-          renderItem={(badge) => (
-            <span className="text-xs text-zinc-600 flex items-center gap-1.5">
-              <span className="w-1 h-1 rounded-full bg-indigo-500/60" />
-              {badge}
-            </span>
+          items={QUICK_PICKS}
+          keyExtractor={(p) => p.title}
+          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+          renderItem={(pick) => (
+            <button
+              type="button"
+              onClick={() => { setText(pick.prompt); }}
+              className="bg-surface-container-low hover:bg-surface-container border border-surface-variant p-4 rounded-lg text-left transition-colors group"
+            >
+              <span className="mb-2 block group-hover:scale-110 transition-transform">
+                {pick.icon}
+              </span>
+              <span className="block font-label font-medium text-on-surface mb-1">{pick.title}</span>
+              <span className="block text-sm text-on-surface-variant">{pick.subtitle}</span>
+            </button>
           )}
         />
       </motion.div>
