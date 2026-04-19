@@ -3,7 +3,10 @@ import { RANK_SOURCES } from '../common/schemas';
 
 @Injectable()
 export class ConstantsService {
-  private readonly DEFAULT_API_URL = 'http://localhost:5173';
+  private readonly DEFAULT_FRONTEND_ORIGINS = [
+    'http://localhost:5173',
+    'https://shortlist-frontend-seven.vercel.app',
+  ];
   private readonly DEFAULT_PORT = 3001;
   private readonly DB_FILENAME = 'shortlist.db';
   private readonly DEFAULT_DB_DIR = 'data';
@@ -63,10 +66,10 @@ export class ConstantsService {
   public readonly MSG_CLARIFYING_NEXT = 'Got it! One more thing…';
 
   // Environment variables retrieval logic
-  getFrontendUrl(): string {
+  getFrontendOrigins(): string | string[] {
     const val = process.env.FRONTEND_URL;
-    if (val) return val;
-    return this.DEFAULT_API_URL;
+    if (val) return val.includes(',') ? val.split(',').map(s => s.trim()) : val;
+    return this.DEFAULT_FRONTEND_ORIGINS;
   }
 
   getPort(): number {

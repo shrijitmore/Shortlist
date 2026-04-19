@@ -8,7 +8,7 @@ async function bootstrap() {
   const constants = app.get(ConstantsService);
 
   app.enableCors({
-    origin: constants.getFrontendUrl(),
+    origin: constants.getFrontendOrigins(),
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
