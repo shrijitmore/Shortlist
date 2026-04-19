@@ -99,15 +99,19 @@ Backend build: `cloudbuild.yaml` at repo root runs `docker build apps/backend`, 
 
 ### Run Tests
 ```bash
-# E2E flow + rate-limit tests (Jest, AI mocked)
-cd apps/backend && npm run test:e2e
+cd apps/backend
 
-# Agent contract + guardrail tests (Vitest, AI mocked)
-cd apps/api && npm test
+# E2E flow + rate-limit (Jest, AI mocked) — 26 tests over *.e2e-spec.ts
+npm run test:e2e
 
-# Real Gemini integration (needs env var)
-cd apps/api && GEMINI_SERVICE_JSON=... npm test
+# Agent contract + guardrails (Vitest, AI mocked) — 6 tests over *.test.ts
+npm run test:agent
+
+# Real Gemini integration (needs env var; 2 extra tests unskip)
+GEMINI_SERVICE_JSON=... npm run test:agent
 ```
+
+Jest owns `*.e2e-spec.ts`, Vitest owns `*.test.ts` — no overlap.
 
 ---
 
@@ -334,4 +338,4 @@ Tests are meaningful, not ceremonial — the E2E suite catches real contract reg
 |---|---|---|
 | `apps/backend/test/flow.e2e-spec.ts` | Jest | Full HTTP flow (intake → clarify → shortlist → compare); multi-question clarification loop; 400 / 404 error cases; response envelope contract |
 | `apps/backend/test/rate-limit.e2e-spec.ts` | Jest | Per-endpoint throttle limits (10/min intake, 30/min compare); 429 envelope shape |
-| `apps/api/src/agent/agent.test.ts` | Vitest | Ranker output contract (3 picks, correct tags, full rationale fields); off-topic guardrail (no legal content); `IntakeRequestSchema` validation (oversized, too short, valid); real Gemini integration via `describe.skipIf(!GEMINI_SERVICE_JSON)` |
+| `apps/backend/test/agent.test.ts` | Vitest | Ranker output contract (3 picks, correct tags, full rationale fields); off-topic guardrail (no legal content); `IntakeRequestSchema` validation (oversized, too short, valid); real Gemini integration via `describe.skipIf(!GEMINI_SERVICE_JSON)` |

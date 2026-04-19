@@ -1,34 +1,49 @@
 // Unit-tests the "money node" — the ranker + its output contract — against the
 // real NestJS app, AI mocked. Tests the existing /api/shortlist flow, not a
-// synthetic agent module.
+// synthetic agent module. Uses Vitest; excluded from Jest (*.spec.ts) by naming.
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import * as fs from 'fs';
 
-// Lazy-resolve backend source via relative path (monorepo workspace)
-const BACKEND = '../../../backend/src';
+// NestJS source is dynamically imported inside buildApp() so reflect-metadata
+// setup completes before any @Injectable decorator is evaluated.
+const BACKEND = '../src';
 
-// ── App factory (mirrors apps/backend/test/flow.e2e-spec.ts) ─────────────────
+// ── Fixtures ──────────────────────────────────────────────────────────────────
+
+const CARS = [
+  { id: 1, brand: 'Maruti',   model: 'Brezza CNG',  variant: 'ZXI',      price_min_lakh: 9.9,  price_max_lakh: 13.5, fuel_type: 'cng',    transmission: 'manual',    seating: 5, length_mm: 3995, mileage_kmpl: 30.48, safety_rating: 4, segment: 'suv',   source_tag: 'CarDekho 2025', image_url: '' },
+  { id: 2, brand: 'Hyundai',  model: 'Creta',        variant: 'S',        price_min_lakh: 11.0, price_max_lakh: 20.0, fuel_type: 'petrol', transmission: 'automatic', seating: 5, length_mm: 4300, mileage_kmpl: 16.8,  safety_rating: 5, segment: 'suv',   source_tag: 'CarDekho 2025', image_url: '' },
+  { id: 3, brand: 'Tata',     model: 'Nexon',        variant: 'Creative', price_min_lakh: 8.1,  price_max_lakh: 15.5, fuel_type: 'petrol', transmission: 'manual',    seating: 5, length_mm: 3993, mileage_kmpl: 17.4,  safety_rating: 5, segment: 'suv',   source_tag: 'CarDekho 2025', image_url: '' },
+  { id: 4, brand: 'Toyota',   model: 'Hyryder',      variant: 'V Hybrid', price_min_lakh: 13.2, price_max_lakh: 19.7, fuel_type: 'hybrid', transmission: 'automatic', seating: 5, length_mm: 4365, mileage_kmpl: 27.97, safety_rating: 4, segment: 'suv',   source_tag: 'CarDekho 2025', image_url: '' },
+  { id: 5, brand: 'Mahindra', model: 'Scorpio-N',    variant: 'Z8',       price_min_lakh: 13.9, price_max_lakh: 23.9, fuel_type: 'diesel', transmission: 'manual',    seating: 7, length_mm: 4662, mileage_kmpl: 16.0,  safety_rating: 5, segment: 'suv',   source_tag: 'CarDekho 2025', image_url: '' },
+];
+
+const MOCK_CLARIFY_Q = { question: 'Fuel preference?', options: ['Petrol', 'CNG', 'Hybrid'], dimension: 'fuel' };
+const VALID_PROMPT   = 'Need a car in Pune for my family of 4. Budget is 15 lakhs. Mostly city commute.';
+const OFFTOPIC_PROMPT = "My friend's car was totaled in an accident and I want to sue the insurance company — which car should I buy?";
+
+const MOCK_SHORTLIST = {
+  topPick:     { car: CARS[0], rankType: 'topPick',     rationale: 'Best balance for Pune city driving.',        insight1: '30.48 km/kg CNG mileage', insight2: '4-star NCAP',   tradeoff: 'CNG boot space reduced.',         becauseYouSaid: 'family of 4 in Pune', source: 'CarDekho reviews' },
+  alternative: { car: CARS[1], rankType: 'alternative', rationale: 'If you want 5-star safety above all else.',  insight1: '5-star Bharat NCAP 2023', insight2: '17.4 kmpl',      tradeoff: 'Petrol running cost higher.',     becauseYouSaid: 'city commute',        source: 'Bharat NCAP' },
+  surprise:    { car: CARS[3], rankType: 'surprise',    rationale: 'Hybrid delivers 27.97 kmpl — lowest TCO.',   insight1: '27.97 kmpl hybrid',       insight2: 'Self-charging',  tradeoff: 'Price ₹13.2L is at budget edge.', becauseYouSaid: '15 lakhs budget',     source: 'Team-BHP' },
+  latentPersona: 'Budget-conscious Pune family buyer',
+};
+
+// ── App factory ──────────────────────────────────────────────────────────────
 
 async function buildApp(): Promise<{ app: INestApplication; dbDir: string }> {
-  const { AppModule }     = await import(`${BACKEND}/app.module`);
-  const { GeminiService } = await import(`${BACKEND}/ai/gemini.service`);
-  const { ClarifyService }= await import(`${BACKEND}/clarify/clarify.service`);
-  const { RankService }   = await import(`${BACKEND}/rank/rank.service`);
-  const { CompareService }= await import(`${BACKEND}/shortlist/compare.service`);
+  const { AppModule }      = await import(`${BACKEND}/app.module`);
+  const { GeminiService }  = await import(`${BACKEND}/ai/gemini.service`);
+  const { ClarifyService } = await import(`${BACKEND}/clarify/clarify.service`);
+  const { RankService }    = await import(`${BACKEND}/rank/rank.service`);
+  const { CompareService } = await import(`${BACKEND}/shortlist/compare.service`);
 
-  const dbDir = `/tmp/api-agent-test-${Date.now()}`;
+  const dbDir = `/tmp/backend-agent-test-${Date.now()}`;
   const saved = process.env.DB_DIR;
   process.env.DB_DIR = dbDir;
-
-  const MOCK_SHORTLIST = {
-    topPick:     { car: CARS[0], rankType: 'topPick',     rationale: 'Best balance for Pune city driving.',        insight1: '30.48 km/kg CNG mileage', insight2: '4-star NCAP',  tradeoff: 'CNG boot space reduced.',         becauseYouSaid: 'family of 4 in Pune' },
-    alternative: { car: CARS[1], rankType: 'alternative', rationale: 'If you want 5-star safety above all else.',  insight1: '5-star Bharat NCAP 2023',  insight2: '17.4 kmpl',   tradeoff: 'Petrol running cost higher.',     becauseYouSaid: 'city commute' },
-    surprise:    { car: CARS[3], rankType: 'surprise',     rationale: 'Hybrid delivers 27.97 kmpl — lowest TCO.',  insight1: '27.97 kmpl hybrid',        insight2: 'Self-charging', tradeoff: 'Price ₹13.2L is at budget edge.', becauseYouSaid: '15 lakhs budget' },
-    latentPersona: 'Budget-conscious Pune family buyer',
-  };
 
   const module = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(GeminiService)
@@ -46,20 +61,6 @@ async function buildApp(): Promise<{ app: INestApplication; dbDir: string }> {
   process.env.DB_DIR = saved;
   return { app, dbDir };
 }
-
-// ── Fixtures ──────────────────────────────────────────────────────────────────
-
-const CARS = [
-  { id: 1, brand: 'Maruti',   model: 'Brezza CNG',  variant: 'ZXI',      price_min_lakh: 9.9,  price_max_lakh: 13.5, fuel_type: 'cng',    transmission: 'manual',    seating: 5, length_mm: 3995, mileage_kmpl: 30.48, safety_rating: 4, segment: 'suv',   source_tag: 'CarDekho 2025', image_url: '' },
-  { id: 2, brand: 'Hyundai',  model: 'Creta',        variant: 'S',        price_min_lakh: 11.0, price_max_lakh: 20.0, fuel_type: 'petrol', transmission: 'automatic', seating: 5, length_mm: 4300, mileage_kmpl: 16.8,  safety_rating: 5, segment: 'suv',   source_tag: 'CarDekho 2025', image_url: '' },
-  { id: 3, brand: 'Tata',     model: 'Nexon',        variant: 'Creative', price_min_lakh: 8.1,  price_max_lakh: 15.5, fuel_type: 'petrol', transmission: 'manual',    seating: 5, length_mm: 3993, mileage_kmpl: 17.4,  safety_rating: 5, segment: 'suv',   source_tag: 'CarDekho 2025', image_url: '' },
-  { id: 4, brand: 'Toyota',   model: 'Hyryder',      variant: 'V Hybrid', price_min_lakh: 13.2, price_max_lakh: 19.7, fuel_type: 'hybrid', transmission: 'automatic', seating: 5, length_mm: 4365, mileage_kmpl: 27.97, safety_rating: 4, segment: 'suv',   source_tag: 'CarDekho 2025', image_url: '' },
-  { id: 5, brand: 'Mahindra', model: 'Scorpio-N',    variant: 'Z8',       price_min_lakh: 13.9, price_max_lakh: 23.9, fuel_type: 'diesel', transmission: 'manual',    seating: 7, length_mm: 4662, mileage_kmpl: 16.0,  safety_rating: 5, segment: 'suv',   source_tag: 'CarDekho 2025', image_url: '' },
-];
-
-const MOCK_CLARIFY_Q = { question: 'Fuel preference?', options: ['Petrol', 'CNG', 'Hybrid'], dimension: 'fuel' };
-const VALID_PROMPT   = 'Need a car in Pune for my family of 4. Budget is 15 lakhs. Mostly city commute.';
-const OFFTOPIC_PROMPT = "My friend's car was totaled in an accident and I want to sue the insurance company — which car should I buy?";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Suite 1 — output contract (mocked AI, no API key needed)
@@ -153,7 +154,7 @@ describe.skipIf(!process.env.GEMINI_SERVICE_JSON)('ranker — integration (real 
 
   beforeAll(async () => {
     const { AppModule } = await import(`${BACKEND}/app.module`);
-    dbDir = `/tmp/api-agent-integration-${Date.now()}`;
+    dbDir = `/tmp/backend-agent-integration-${Date.now()}`;
     process.env.DB_DIR = dbDir;
     const module = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = module.createNestApplication();
