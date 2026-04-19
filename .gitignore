@@ -15,8 +15,10 @@ build/
 .next/
 coverage/
 
-# Data (uncomment if cars.db gets big)
-# *.db
+# SQLite runtime databases and WAL files
+*.db
+*.db-shm
+*.db-wal
 
 # OS
 .DS_Store

@@ -19,14 +19,14 @@ RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/scripts ./scripts
-COPY --from=builder /app/data ./data
+COPY --from=builder /app/data/cardekho-models.json ./data/cardekho-models.json
 
 RUN mkdir -p /app/data
 
 ENV NODE_ENV=production
-ENV PORT=3001
+ENV PORT=8080
 ENV DB_DIR=/app/data
 
-EXPOSE 3001
+EXPOSE 8080
 
-CMD ["sh", "-c", "npm run seed:prod && node dist/main"]
+CMD ["sh", "-c", "npm run seed:prod; node dist/main"]
