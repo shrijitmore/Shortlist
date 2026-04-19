@@ -1,7 +1,7 @@
 // test/rate-limit.e2e-spec.ts — per-endpoint throttle tests (AI mocked, real throttler)
 import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import * as fs from 'fs';
 import { AppModule } from '../src/app.module';
 import { GeminiService } from '../src/ai/gemini.service';
@@ -100,20 +100,16 @@ describe('Rate limit — POST /api/intake (10/min)', () => {
   });
 
   it('returns 429 after 10 requests in the same window', async () => {
-    const promises: Promise<number>[] = [];
+    const statuses: number[] = [];
 
     for (let i = 0; i < 11; i++) {
-      promises.push(
-        request(app.getHttpServer())
-          .post('/api/intake')
-          .send({ text: VALID_TEXT })
-          .then(res => res.status),
-      );
+      const res = await request(app.getHttpServer())
+        .post('/api/intake')
+        .send({ text: VALID_TEXT });
+      statuses.push(res.status);
     }
 
-    const statuses = await Promise.all(promises);
     const hits429 = collect429(statuses);
-
     expect(hits429).toBeGreaterThanOrEqual(1);
   });
 
@@ -159,22 +155,18 @@ describe('Rate limit — POST /api/clarify (30/min)', () => {
   });
 
   it('returns 429 after 30 requests in the same window', async () => {
-    const promises: Promise<number>[] = [];
+    const statuses: number[] = [];
 
     // Sending 31 requests with a non-existent UUID — each returns 404 quickly.
     // The throttler counts them before the controller logic runs.
     for (let i = 0; i < 31; i++) {
-      promises.push(
-        request(app.getHttpServer())
-          .post('/api/clarify')
-          .send({ requestId: NULL_UUID })
-          .then(res => res.status),
-      );
+      const res = await request(app.getHttpServer())
+        .post('/api/clarify')
+        .send({ requestId: NULL_UUID });
+      statuses.push(res.status);
     }
 
-    const statuses = await Promise.all(promises);
     const hits429 = collect429(statuses);
-
     expect(hits429).toBeGreaterThanOrEqual(1);
   });
 
@@ -216,20 +208,16 @@ describe('Rate limit — POST /api/shortlist (30/min)', () => {
   });
 
   it('returns 429 after 30 requests in the same window', async () => {
-    const promises: Promise<number>[] = [];
+    const statuses: number[] = [];
 
     for (let i = 0; i < 31; i++) {
-      promises.push(
-        request(app.getHttpServer())
-          .post('/api/shortlist')
-          .send({ requestId: NULL_UUID, answer: 'Petrol' })
-          .then(res => res.status),
-      );
+      const res = await request(app.getHttpServer())
+        .post('/api/shortlist')
+        .send({ requestId: NULL_UUID, answer: 'Petrol' });
+      statuses.push(res.status);
     }
 
-    const statuses = await Promise.all(promises);
     const hits429 = collect429(statuses);
-
     expect(hits429).toBeGreaterThanOrEqual(1);
   });
 });
@@ -252,20 +240,16 @@ describe('Rate limit — POST /api/shortlist/compare (10/min)', () => {
   });
 
   it('returns 429 after 10 requests in the same window', async () => {
-    const promises: Promise<number>[] = [];
+    const statuses: number[] = [];
 
     for (let i = 0; i < 11; i++) {
-      promises.push(
-        request(app.getHttpServer())
-          .post('/api/shortlist/compare')
-          .send({ requestId: NULL_UUID })
-          .then(res => res.status),
-      );
+      const res = await request(app.getHttpServer())
+        .post('/api/shortlist/compare')
+        .send({ requestId: NULL_UUID });
+      statuses.push(res.status);
     }
 
-    const statuses = await Promise.all(promises);
     const hits429 = collect429(statuses);
-
     expect(hits429).toBeGreaterThanOrEqual(1);
   });
 

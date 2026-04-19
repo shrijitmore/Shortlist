@@ -1,6 +1,9 @@
 // apps/backend/src/common/schemas.ts
 import { z } from 'zod';
 
+export const RANK_SOURCES = ['Autocar India', 'Team-BHP', 'Bharat NCAP', 'CarDekho reviews'] as const;
+export type RankSource = typeof RANK_SOURCES[number];
+
 export const IntakeRequestSchema = z.object({
   text: z.string().min(10, 'Please describe your situation in a bit more detail').max(2000),
 });
@@ -43,10 +46,11 @@ export const ClarifyQuestionSchema = z.object({
 
 export const SharedRankCardSchema = z.object({
   rationale: z.string(),
-  insight1: z.string(),
-  insight2: z.string(),
+  insight1: z.string().regex(/\d/, 'insight1 must cite a specific number from the car\'s specs'),
+  insight2: z.string().regex(/\d/, 'insight2 must cite a specific number from the car\'s specs'),
   tradeoff: z.string(),
   becauseYouSaid: z.string(),
+  source: z.enum(RANK_SOURCES),
 });
 
 export const AiRankResultSchema = z.object({

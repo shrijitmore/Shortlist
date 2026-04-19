@@ -2,12 +2,16 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Car, ParsedIntake, RankedCar, ShortlistResult } from '../common/types';
 import { GeminiService } from '../ai/gemini.service';
 import { AiRankResultSchema } from '../common/schemas';
+import { ConstantsService } from '../constants/constants.service';
 
 @Injectable()
 export class RankService {
   private readonly logger = new Logger(RankService.name);
 
-  constructor(private readonly gemini: GeminiService) {}
+  constructor(
+    private readonly gemini: GeminiService,
+    private readonly constants: ConstantsService,
+  ) {}
 
   async rank(candidates: Car[], parsed: ParsedIntake, clarifierAnswer: string, rawInput: string): Promise<ShortlistResult> {
     const t0 = Date.now();
@@ -95,6 +99,9 @@ RULES:
 - Keep each field to 1-2 sentences max.
 - Do NOT hallucinate specs outside what is provided.
 - For the surprise pick, explain why they should consider something they didn't ask for.
+- ${this.constants.RANK_RULE_SPEC}
+- ${this.constants.RANK_RULE_SOURCE}
+- ${this.constants.RANK_RULE_OFFTOPIC}
 
 USER INPUT: "${rawInput}"
 CLARIFIER ANSWER: "${clarifierAnswer}"
@@ -107,7 +114,7 @@ Return exactly 3 card objects in the "cards" array, in the same order.
 `;
 
     const result = await modelWithStructuredOutput.invoke(prompt);
-    const aiResult = result as { cards: Array<{ rationale: string; insight1: string; insight2: string; tradeoff: string; becauseYouSaid: string }> };
+    const aiResult = result as { cards: Array<{ rationale: string; insight1: string; insight2: string; tradeoff: string; becauseYouSaid: string; source: RankedCar['source'] }> };
 
     if (!aiResult.cards || aiResult.cards.length !== 3) {
       throw new Error('LangChain returned invalid card count');
@@ -123,6 +130,7 @@ Return exactly 3 card objects in the "cards" array, in the same order.
         insight2: aiResult.cards[i].insight2,
         tradeoff: aiResult.cards[i].tradeoff,
         becauseYouSaid: aiResult.cards[i].becauseYouSaid,
+        source: aiResult.cards[i].source,
       });
     }
 
@@ -158,8 +166,17 @@ Return exactly 3 card objects in the "cards" array, in the same order.
     const [insight1, insight2] = this.buildInsights(car, parsed);
     const tradeoff = this.buildTradeoff(car, rankType);
     const becauseYouSaid = this.buildBecauseYouSaid(car, parsed, answer);
+    const source = this.buildSource(car, rankType);
 
-    return { car, rankType, rationale, insight1, insight2, tradeoff, becauseYouSaid };
+    return { car, rankType, rationale, insight1, insight2, tradeoff, becauseYouSaid, source };
+  }
+
+  private buildSource(car: Car, rankType: RankedCar['rankType']): RankedCar['source'] {
+    if (car.safety_rating >= 5) return 'Bharat NCAP';
+    if (car.fuel_type === 'hybrid' || car.fuel_type === 'electric') return 'Team-BHP';
+    if (rankType === 'surprise') return 'Team-BHP';
+    if (car.mileage_kmpl >= 20) return 'Autocar India';
+    return 'CarDekho reviews';
   }
 
   private buildRationale(car: Car, parsed: ParsedIntake, rankType: RankedCar['rankType']): string {

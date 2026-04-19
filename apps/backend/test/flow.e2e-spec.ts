@@ -1,7 +1,7 @@
 // test/flow.e2e-spec.ts — end-to-end flow tests (AI mocked, real DB in temp dir)
 import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import * as fs from 'fs';
 import { AppModule } from '../src/app.module';
 import { GeminiService } from '../src/ai/gemini.service';
@@ -39,6 +39,7 @@ function makeRankedCar(rankType: RankedCar['rankType']): RankedCar {
     insight2: '4-star NCAP safety rating',
     tradeoff: 'Manual gearbox only in this price range.',
     becauseYouSaid: 'Because you need a 7-seater within budget.',
+    source: 'CarDekho reviews',
   };
 }
 

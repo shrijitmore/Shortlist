@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { RANK_SOURCES } from '../common/schemas';
 
 @Injectable()
 export class ConstantsService {
@@ -45,6 +46,12 @@ export class ConstantsService {
   public readonly ERR_AI_UNAVAILABLE = 'AI service is unavailable. Cannot generate clarification questions.';
 
   public readonly MAX_CLARIFY_QUESTIONS = 5;
+
+  // Ranker guardrails — used in AI prompt to enforce source citation, spec numbers, and off-topic refusal
+  public readonly RANK_SOURCES_LIST = RANK_SOURCES.join(', ');
+  public readonly RANK_RULE_SOURCE = `source MUST be exactly one of: ${RANK_SOURCES.join(', ')}.`;
+  public readonly RANK_RULE_SPEC = 'insight1 and insight2 MUST each include at least one specific number from the provided car specs — no generic claims.';
+  public readonly RANK_RULE_OFFTOPIC = 'Do NOT include accidents, lawsuits, insurance disputes, legal advice, or any non-car content in any field.';
 
   // Rate limiting (TTL in milliseconds)
   public readonly THROTTLE_TTL_MS       = 60_000;  // 1 minute window

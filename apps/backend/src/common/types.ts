@@ -50,6 +50,7 @@ export interface RankedCar {
   insight2: string;
   tradeoff: string;
   becauseYouSaid: string;
+  source: 'Autocar India' | 'Team-BHP' | 'Bharat NCAP' | 'CarDekho reviews';
 }
 
 export interface ShortlistResult {
