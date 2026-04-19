@@ -68,8 +68,12 @@ export class ConstantsService {
   // Environment variables retrieval logic
   getFrontendOrigins(): string | string[] {
     const val = process.env.FRONTEND_URL;
-    if (val) return val.includes(',') ? val.split(',').map(s => s.trim()) : val;
-    return this.DEFAULT_FRONTEND_ORIGINS;
+    if (!val) return this.DEFAULT_FRONTEND_ORIGINS;
+    if (!val.includes(',')) return val;
+    const raw = val.split(',');
+    const trimmed: string[] = [];
+    for (let i = 0; i < raw.length; i++) trimmed.push(raw[i].trim());
+    return trimmed;
   }
 
   getPort(): number {
