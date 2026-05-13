@@ -4,7 +4,6 @@ A conversational car-buying assistant for the Indian market. Users describe thei
 
 **Live app:** https://shortlist-frontend-seven.vercel.app  
 **GitHub:** https://github.com/shrijitmore/Shortlist.git  
-**Screen recording:** https://drive.google.com/drive/folders/1XVbxSqhjuUuJ_rTQVUJVSm-izuccGL8u?usp=sharing
 
 ---
 
